@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+
+    <style>
+      canvas{
+        position:absolute;
+        background-color:black;
+        margin:auto;
+        top:0px;
+        bottom:0px;
+        left:0px;
+        right:0px;
+        width:600px;
+        height:600px;
+      }
+    </style>
+
+    <title>Vanilla Cude</title>
+  </head>
+  <body>
+
+    <canvas id="canvas" width="600" height="600"></canvas>
+
+    <script>
+
+    const MODEL_MIN_X = -2, MODEL_MAX_X = 2;
+    const MODEL_MIN_Y = -2, MODEL_MAX_Y = 2;
+
+    const cnv = document.querySelector("#canvas");
+    const ctx = cnv.getContext("2d");
+    const WIDTH = 600, HEIGHT = 600;
+    const STEP = 0.5;
+
+    const point = [];
+
+    function initGeometry() {
+
+      for(let x = -1; x <= 1; x += STEP) {
+        for(let y = -1; y <= 1; y += STEP) {
+          for(let z = -1; z <= 1; z += STEP) {
+            point.push([x, y, z]);
+          }
+        }
+      }
+
+    }
+
+    function perspectiveProjection(point) {
+
+      const x = point[0],
+            y = point[1],
+            z = point[2];
+
+      return [
+        x / ( z + 4 ),
+        y / ( z + 4 )
+      ];
+
+    }
+
+    function project(point) {
+
+      const perspectivePoint = perspectiveProjection(point);
+
+      const x = perspectivePoint[0],
+            y = perspectivePoint[1];
+
+      return [
+        WIDTH * ( x - MODEL_MIN_X ) / ( MODEL_MAX_X - MODEL_MIN_X ),
+        HEIGHT * ( 1 - ( y - MODEL_MIN_Y ) / ( MODEL_MAX_Y - MODEL_MIN_Y ) )
+      ];
+    }
+
+    function renderPoint(point) {
+
+      const projectedPoint = project(point);
+      const x = projectedPoint[0],
+            y = projectedPoint[1];
+
+      ctx.beginPath();
+      ctx.moveTo( x, y );
+      ctx.lineTo( x + 1, y + 1 );
+
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = "white";
+      ctx.stroke();
+
+    }
+
+    function rotateY(point, theta) {
+
+      const x = point[0],
+            y = point[1],
+            z = point[2];
+
+      return [
+        Math.cos(theta) * x  - Math.sin(theta) * z,
+        y,
+        Math.sin(theta) * x + Math.cos(theta) * z
+      ];
+    }
+
+    function rotateX(point, theta) {
+
+      const x = point[0],
+            y = point[1],
+            z = point[2];
+
+      return [
+        x,
+        Math.cos(theta) * y  - Math.sin(theta) * z,
+        Math.sin(theta) * y + Math.cos(theta) * z
+      ];
+    }
+
+
+    let theta = 0, dtheta = 0.03;
+
+    function draw() {
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+      theta += dtheta;
+
+      point.forEach((point) => {
+        point = rotateX(point, theta);
+        point = rotateY(point, theta);
+        renderPoint(point);
+      });
+
+      requestAnimationFrame(draw);
+
+    }
+
+    initGeometry();
+    draw();
+
+    </script>
+
+  </body>
+</html>
